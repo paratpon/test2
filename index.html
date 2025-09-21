@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .page {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .home-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .home-button {
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+            padding: 40px 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .home-button:hover {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .add-row-btn {
+            margin-top: 20px;
+            background: #28a745;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .goal-item {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+
+        .satisfaction-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .schedule-table {
+            font-size: 12px;
+        }
+
+        .schedule-table th {
+            padding: 8px 4px;
+            text-align: center;
+        }
+
+        .schedule-table td {
+            height: 40px;
+            width: 120px;
+            padding: 2px;
+            position: relative;
+            vertical-align: top;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .schedule-table td:not(.time-cell) {
+            cursor: pointer;
+        }
+
+        .schedule-table td:not(.time-cell):hover {
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+
+        .time-cell {
+            background: #f8f9fa;
+            font-weight: bold;
+            text-align: center;
+            width: 80px;
+        }
+
+        .schedule-block {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            margin: 1px 0;
+            min-height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            left: 2px;
+            right: 2px;
+            z-index: 10;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .schedule-block:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            transform: scale(1.02);
+        }
+
+        .schedule-block .resize-handle {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 4px;
+            background: rgba(255,255,255,0.5);
+            cursor: ns-resize;
+            border-radius: 2px;
+        }
+
+        .schedule-block.dragging {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 300px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .home-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            .schedule-table td {
+                width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Home Page -->
+        <div id="home" class="page active">
+            <h1>🎯 Habit Tracker</h1>
+            <p style="text-align: center; font-size: 1.2em; margin-bottom: 40px; color: #666;">
+                Track your progress, achieve your goals, and build better habits
+            </p>
+            <div class="home-buttons">
+                <button class="home-button" onclick="showPage('study')">
+                    📚 Study Tracking<br>
+                    <small>Monitor your learning progress</small>
+                </button>
+                <button class="home-button" onclick="showPage('life')">
+                    🌟 Life Goals<br>
+                    <small>Track personal development</small>
+                </button>
+                <button class="home-button" onclick="showPage('schedule')">
+                    📅 Schedule Planner<br>
+                    <small>Organize your weekly calendar</small>
+                </button>
+            </div>
+        </div>
+
+        <!-- Study Tracking Page -->
+        <div id="study" class="page">
+            <div class="nav-buttons">
+                <button onclick="showPage('home')">🏠 Home</button>
+                <button onclick="showPage('life')">🌟 Life Goals</button>
+                <button onclick="showPage('schedule')">📅 Schedule</button>
+            </div>
+            
+            <h2>📚 Study Progress Tracker</h2>
+            <table id="studyTable">
+                <thead>
+                    <tr>
+                        <th>Course Name</th>
+                        <th>Total Rounds</th>
+                        <th>Rounds Done</th>
+                        <th>Progress</th>
+                        <th>Weaknesses</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" placeholder="Enter course name" oninput="saveData()"></td>
+                        <td><input type="number" min="1" placeholder="10" oninput="updateProgress(this); saveData()"></td>
+                        <td><input type="number" min="0" placeholder="0" oninput="updateProgress(this); saveData()"></td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 0%"></div>
+                            </div>
+                            <span class="progress-text">0%</span>
+                        </td>
+                        <td><textarea placeholder="List weaknesses and areas to improve" oninput="saveData()"></textarea></td>
+                        <td><button class="delete-btn" onclick="deleteStudyRow(this)">Delete</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="add-row-btn" onclick="addStudyRow()">+ Add Course</button>
+        </div>
+
+        <!-- Life Goals Page -->
+        <div id="life" class="page">
+            <div class="nav-buttons">
+                <button onclick="showPage('home')">🏠 Home</button>
+                <button onclick="showPage('study')">📚 Study</button>
+                <button onclick="showPage('schedule')">📅 Schedule</button>
+            </div>
+            
+            <h2>🌟 Life Goals Tracker</h2>
+            <div id="goalsContainer">
+                <div class="goal-item">
+                    <input type="text" placeholder="Enter your goal" style="font-size: 16px; font-weight: bold; margin-bottom: 10px;" oninput="saveData()">
+                    <div style="margin-bottom: 10px;">
+                        <label>Satisfaction Level: <span class="satisfaction-value">5</span>/10</label>
+                        <input type="range" class="satisfaction-slider" min="1" max="10" value="5" oninput="updateSatisfaction(this); saveData()">
+                    </div>
+                    <textarea placeholder="How can you improve this area?" oninput="saveData()"></textarea>
+                    <button class="delete-btn" onclick="deleteGoal(this)" style="margin-top: 10px;">Delete Goal</button>
+                </div>
+            </div>
+            <button class="add-row-btn" onclick="addGoal()">+ Add Goal</button>
+        </div>
+
+        <!-- Schedule Page -->
+        <div id="schedule" class="page">
+            <div class="nav-buttons">
+                <button onclick="showPage('home')">🏠 Home</button>
+                <button onclick="showPage('study')">📚 Study</button>
+                <button onclick="showPage('life')">🌟 Life Goals</button>
+            </div>
+            
+            <h2>📅 Weekly Schedule Planner</h2>
+            <p style="margin-bottom: 20px; color: #666;">Click on any time slot to add or edit activities</p>
+            <div style="overflow-x: auto;">
+                <table class="schedule-table" id="scheduleTable">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Monday</th>
+                            <th>Tuesday</th>
+                            <th>Wednesday</th>
+                            <th>Thursday</th>
+                            <th>Friday</th>
+                            <th>Saturday</th>
+                            <th>Sunday</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Schedule rows will be generated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for schedule editing -->
+    <div id="scheduleModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Edit Schedule Block</h3>
+            <label for="activityInput">Activity:</label>
+            <input type="text" id="activityInput" placeholder="Enter activity">
+            <br><br>
+            <label for="startTimeSelect">Start Time:</label>
+            <select id="startTimeSelect"></select>
+            <br><br>
+            <label for="durationSelect">Duration:</label>
+            <select id="durationSelect">
+                <option value="1">1 hour</option>
+                <option value="2">2 hours</option>
+                <option value="3">3 hours</option>
+                <option value="4">4 hours</option>
+                <option value="5">5 hours</option>
+                <option value="6">6 hours</option>
+            </select>
+            <br><br>
+            <button onclick="saveActivity()">Save</button>
+            <button onclick="deleteActivity()">Delete</button>
+        </div>
+    </div>
+
+    <script>
+        let currentScheduleCell = null;
+        let scheduleData = {};
+        let isDragging = false;
+        let currentBlock = null;
+        let dragStartY = 0;
+        let originalDuration = 1;
+
+        // Navigation function
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        // Study tracking functions
+        function updateProgress(input) {
+            const row = input.closest('tr');
+            const totalInput = row.querySelector('td:nth-child(2) input');
+            const doneInput = row.querySelector('td:nth-child(3) input');
+            const progressFill = row.querySelector('.progress-fill');
+            const progressText = row.querySelector('.progress-text');
+            
+            const total = parseInt(totalInput.value) || 0;
+            const done = parseInt(doneInput.value) || 0;
+            
+            if (done > total) {
+                doneInput.value = total;
+            }
+            
+            const percentage = total > 0 ? Math.round((done / total) * 100) : 0;
+            progressFill.style.width = percentage + '%';
+            progressText.textContent = percentage + '%';
+        }
+
+        function addStudyRow() {
+            const tbody = document.querySelector('#studyTable tbody');
+            const newRow = tbody.rows[0].cloneNode(true);
+            
+            // Clear all inputs
+            newRow.querySelectorAll('input, textarea').forEach(input => {
+                input.value = '';
+            });
+            
+            // Reset progress bar
+            newRow.querySelector('.progress-fill').style.width = '0%';
+            newRow.querySelector('.progress-text').textContent = '0%';
+            
+            tbody.appendChild(newRow);
+            saveData();
+        }
+
+        function deleteStudyRow(button) {
+            const tbody = document.querySelector('#studyTable tbody');
+            if (tbody.rows.length > 1) {
+                button.closest('tr').remove();
+                saveData();
+            }
+        }
+
+        // Life goals functions
+        function updateSatisfaction(slider) {
+            const valueSpan = slider.parentNode.querySelector('.satisfaction-value');
+            valueSpan.textContent = slider.value;
+        }
+
+        function addGoal() {
+            const container = document.getElementById('goalsContainer');
+            const goalItem = container.children[0].cloneNode(true);
+            
+            // Clear inputs
+            goalItem.querySelectorAll('input[type="text"], textarea').forEach(input => {
+                input.value = '';
+            });
+            goalItem.querySelector('input[type="range"]').value = 5;
+            goalItem.querySelector('.satisfaction-value').textContent = '5';
+            
+            container.appendChild(goalItem);
+            saveData();
+        }
+
+        function deleteGoal(button) {
+            const container = document.getElementById('goalsContainer');
+            if (container.children.length > 1) {
+                button.parentNode.remove();
+                saveData();
+            }
+        }
+
+        // Schedule functions
+        function initializeSchedule() {
+            const tbody = document.querySelector('#scheduleTable tbody');
+            const hours = [];
+            const startTimeSelect = document.getElementById('startTimeSelect');
+            
+            for (let i = 0; i < 24; i++) {
+                const time = i.toString().padStart(2, '0') + ':00';
+                hours.push(time);
+                
+                // Populate start time select
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = time;
+                startTimeSelect.appendChild(option);
+            }
+            
+            hours.forEach((hour, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="time-cell">${hour}</td>
+                    <td data-hour="${index}" data-day="0" onclick="editSchedule(this, ${index}, 0)"></td>
+                    <td data-hour="${index}" data-day="1" onclick="editSchedule(this, ${index}, 1)"></td>
+                    <td data-hour="${index}" data-day="2" onclick="editSchedule(this, ${index}, 2)"></td>
+                    <td data-hour="${index}" data-day="3" onclick="editSchedule(this, ${index}, 3)"></td>
+                    <td data-hour="${index}" data-day="4" onclick="editSchedule(this, ${index}, 4)"></td>
+                    <td data-hour="${index}" data-day="5" onclick="editSchedule(this, ${index}, 5)"></td>
+                    <td data-hour="${index}" data-day="6" onclick="editSchedule(this, ${index}, 6)"></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function editSchedule(cell, hour, day) {
+            if (isDragging) return;
+            
+            currentScheduleCell = cell;
+            const modal = document.getElementById('scheduleModal');
+            const activityInput = document.getElementById('activityInput');
+            const startTimeSelect = document.getElementById('startTimeSelect');
+            const durationSelect = document.getElementById('durationSelect');
+            
+            const key = `${day}-${hour}`;
+            const existingData = scheduleData[key];
+            
+            if (existingData) {
+                activityInput.value = existingData.activity || '';
+                startTimeSelect.value = existingData.startHour || hour;
+                durationSelect.value = existingData.duration || 1;
+            } else {
+                activityInput.value = '';
+                startTimeSelect.value = hour;
+                durationSelect.value = 1;
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        function saveActivity() {
+            const activityInput = document.getElementById('activityInput');
+            const startTimeSelect = document.getElementById('startTimeSelect');
+            const durationSelect = document.getElementById('durationSelect');
+            
+            const activity = activityInput.value.trim();
+            const startHour = parseInt(startTimeSelect.value);
+            const duration = parseInt(durationSelect.value);
+            
+            if (currentScheduleCell) {
+                const day = parseInt(currentScheduleCell.dataset.day);
+                const originalHour = parseInt(currentScheduleCell.dataset.hour);
+                
+                // Clear any existing blocks for this time slot
+                clearBlocksForTimeRange(day, originalHour, 6); // Clear up to 6 hours max
+                
+                if (activity) {
+                    // Create new block data
+                    const blockData = {
+                        activity: activity,
+                        startHour: startHour,
+                        duration: duration,
+                        day: day
+                    };
+                    
+                    // Save data for all hours covered by this block
+                    for (let i = 0; i < duration; i++) {
+                        const currentHour = startHour + i;
+                        if (currentHour < 24) {
+                            const key = `${day}-${currentHour}`;
+                            scheduleData[key] = blockData;
+                        }
+                    }
+                    
+                    renderScheduleBlock(day, startHour, duration, activity);
+                }
+                
+                saveData();
+            }
+            
+            closeModal();
+        }
+
+        function clearBlocksForTimeRange(day, startHour, maxDuration) {
+            // Clear existing blocks in the area
+            for (let i = 0; i < maxDuration; i++) {
+                const hour = startHour + i;
+                if (hour < 24) {
+                    const key = `${day}-${hour}`;
+                    delete scheduleData[key];
+                    
+                    const cell = document.querySelector(`[data-day="${day}"][data-hour="${hour}"]`);
+                    if (cell) {
+                        const existingBlock = cell.querySelector('.schedule-block');
+                        if (existingBlock) {
+                            existingBlock.remove();
+                        }
+                    }
+                }
+            }
+        }
+
+        function renderScheduleBlock(day, startHour, duration, activity) {
+            const startCell = document.querySelector(`[data-day="${day}"][data-hour="${startHour}"]`);
+            if (!startCell) return;
+            
+            const blockHeight = duration * 40 - 4; // 40px per hour minus padding
+            
+            const block = document.createElement('div');
+            block.className = 'schedule-block';
+            block.style.height = blockHeight + 'px';
+            block.style.top = '2px';
+            block.innerHTML = `
+                ${activity}
+                <div class="resize-handle"></div>
+            `;
+            
+            // Add event listeners for dragging
+            block.addEventListener('mousedown', startDrag);
+            block.querySelector('.resize-handle').addEventListener('mousedown', startResize);
+            
+            // Prevent event bubbling to cell click
+            block.addEventListener('click', (e) => {
+                e.stopPropagation();
+                editScheduleBlock(day, startHour);
+            });
+            
+            startCell.appendChild(block);
+        }
+
+        function editScheduleBlock(day, hour) {
+            const cell = document.querySelector(`[data-day="${day}"][data-hour="${hour}"]`);
+            editSchedule(cell, hour, day);
+        }
+
+        function startDrag(e) {
+            if (e.target.classList.contains('resize-handle')) return;
+            
+            e.preventDefault();
+            isDragging = true;
+            currentBlock = e.target;
+            dragStartY = e.clientY;
+            
+            currentBlock.classList.add('dragging');
+            
+            document.addEventListener('mousemove', handleDrag);
+            document.addEventListener('mouseup', endDrag);
+        }
+
+        function startResize(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            isDragging = true;
+            currentBlock = e.target.parentNode;
+            dragStartY = e.clientY;
+            originalDuration = parseInt(currentBlock.style.height) / 40 + 0.1; // Add small buffer for rounding
+            
+            currentBlock.classList.add('dragging');
+            
+            document.addEventListener('mousemove', handleResize);
+            document.addEventListener('mouseup', endResize);
+        }
+
+        function handleDrag(e) {
+            if (!currentBlock) return;
+            
+            const deltaY = e.clientY - dragStartY;
+            const hourChange = Math.round(deltaY / 40);
+            
+            // Update visual position (you could implement this for better UX)
+        }
+
+        function handleResize(e) {
+            if (!currentBlock) return;
+            
+            const deltaY = e.clientY - dragStartY;
+            const hourChange = Math.round(deltaY / 40);
+            const newDuration = Math.max(1, Math.min(6, originalDuration + hourChange));
+            
+            currentBlock.style.height = (newDuration * 40 - 4) + 'px';
+        }
+
+        function endDrag(e) {
+            if (!currentBlock) return;
+            
+            currentBlock.classList.remove('dragging');
+            
+            // Here you could implement the logic to move the block to a new time slot
+            // For now, we'll just end the drag operation
+            
+            isDragging = false;
+            currentBlock = null;
+            
+            document.removeEventListener('mousemove', handleDrag);
+            document.removeEventListener('mouseup', endDrag);
+        }
+
+        function endResize(e) {
+            if (!currentBlock) return;
+            
+            currentBlock.classList.remove('dragging');
+            
+            // Update the actual data with new duration
+            const newHeight = parseInt(currentBlock.style.height);
+            const newDuration = Math.ceil((newHeight + 4) / 40);
+            
+            // Find and update the schedule data
+            const parentCell = currentBlock.parentNode;
+            const day = parseInt(parentCell.dataset.day);
+            const hour = parseInt(parentCell.dataset.hour);
+            
+            if (scheduleData[`${day}-${hour}`]) {
+                const activity = scheduleData[`${day}-${hour}`].activity;
+                
+                // Clear old data
+                clearBlocksForTimeRange(day, hour, 6);
+                
+                // Save new data
+                const blockData = {
+                    activity: activity,
+                    startHour: hour,
+                    duration: newDuration,
+                    day: day
+                };
+                
+                for (let i = 0; i < newDuration; i++) {
+                    const currentHour = hour + i;
+                    if (currentHour < 24) {
+                        const key = `${day}-${currentHour}`;
+                        scheduleData[key] = blockData;
+                    }
+                }
+                
+                saveData();
+            }
+            
+            isDragging = false;
+            currentBlock = null;
+            
+            document.removeEventListener('mousemove', handleResize);
+            document.removeEventListener('mouseup', endResize);
+        }
+
+        function deleteActivity() {
+            if (currentScheduleCell) {
+                const day = parseInt(currentScheduleCell.dataset.day);
+                const hour = parseInt(currentScheduleCell.dataset.hour);
+                
+                // Clear all related data for this block
+                clearBlocksForTimeRange(day, hour, 6);
+                
+                saveData();
+            }
+            
+            closeModal();
+        }
+
+        function closeModal() {
+            document.getElementById('scheduleModal').style.display = 'none';
+            currentScheduleCell = null;
+        }
+
+        // Data persistence functions
+        function saveData() {
+            const data = {
+                study: [],
+                goals: [],
+                schedule: scheduleData
+            };
+            
+            // Save study data
+            document.querySelectorAll('#studyTable tbody tr').forEach(row => {
+                const cells = row.querySelectorAll('td');
+                data.study.push({
+                    course: cells[0].querySelector('input').value,
+                    total: cells[1].querySelector('input').value,
+                    done: cells[2].querySelector('input').value,
+                    weaknesses: cells[4].querySelector('textarea').value
+                });
+            });
+            
+            // Save goals data
+            document.querySelectorAll('.goal-item').forEach(item => {
+                data.goals.push({
+                    goal: item.querySelector('input[type="text"]').value,
+                    satisfaction: item.querySelector('input[type="range"]').value,
+                    improvement: item.querySelector('textarea').value
+                });
+            });
+            
+            // Store in memory (no localStorage in Claude artifacts)
+            window.habitTrackerData = data;
+        }
+
+        function loadData() {
+            const data = window.habitTrackerData;
+            if (!data) return;
+            
+            // Load study data
+            if (data.study && data.study.length > 0) {
+                const tbody = document.querySelector('#studyTable tbody');
+                tbody.innerHTML = '';
+                
+                data.study.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><input type="text" value="${item.course}" oninput="saveData()"></td>
+                        <td><input type="number" min="1" value="${item.total}" oninput="updateProgress(this); saveData()"></td>
+                        <td><input type="number" min="0" value="${item.done}" oninput="updateProgress(this); saveData()"></td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 0%"></div>
+                            </div>
+                            <span class="progress-text">0%</span>
+                        </td>
+                        <td><textarea oninput="saveData()">${item.weaknesses}</textarea></td>
+                        <td><button class="delete-btn" onclick="deleteStudyRow(this)">Delete</button></td>
+                    `;
+                    tbody.appendChild(row);
+                    
+                    // Update progress
+                    updateProgress(row.querySelector('input[type="number"]'));
+                });
+            }
+            
+            // Load goals data
+            if (data.goals && data.goals.length > 0) {
+                const container = document.getElementById('goalsContainer');
+                container.innerHTML = '';
+                
+                data.goals.forEach(item => {
+                    const goalDiv = document.createElement('div');
+                    goalDiv.className = 'goal-item';
+                    goalDiv.innerHTML = `
+                        <input type="text" value="${item.goal}" style="font-size: 16px; font-weight: bold; margin-bottom: 10px;" oninput="saveData()">
+                        <div style="margin-bottom: 10px;">
+                            <label>Satisfaction Level: <span class="satisfaction-value">${item.satisfaction}</span>/10</label>
+                            <input type="range" class="satisfaction-slider" min="1" max="10" value="${item.satisfaction}" oninput="updateSatisfaction(this); saveData()">
+                        </div>
+                        <textarea oninput="saveData()">${item.improvement}</textarea>
+                        <button class="delete-btn" onclick="deleteGoal(this)" style="margin-top: 10px;">Delete Goal</button>
+                    `;
+                    container.appendChild(goalDiv);
+                });
+            }
+            
+            // Load schedule data
+            if (data.schedule) {
+                scheduleData = data.schedule;
+                
+                // Group schedule data by blocks
+                const processedBlocks = new Set();
+                
+                Object.keys(scheduleData).forEach(key => {
+                    if (processedBlocks.has(key)) return;
+                    
+                    const blockData = scheduleData[key];
+                    if (blockData && blockData.activity) {
+                        // Mark all hours of this block as processed
+                        for (let i = 0; i < blockData.duration; i++) {
+                            const hour = blockData.startHour + i;
+                            const blockKey = `${blockData.day}-${hour}`;
+                            processedBlocks.add(blockKey);
+                        }
+                        
+                        // Render the block
+                        renderScheduleBlock(blockData.day, blockData.startHour, blockData.duration, blockData.activity);
+                    }
+                });
+            }
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSchedule();
+            loadData();
+            
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                const modal = document.getElementById('scheduleModal');
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+            
+            // Close modal with X button
+            document.querySelector('.close').onclick = closeModal;
+        });
+    </script>
+</body>
+</html>
